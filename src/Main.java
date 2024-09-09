@@ -61,20 +61,16 @@ public class Main {
         JsonObject jsonObject = loadJsonTree(jsonFile);
         long loadTime = System.currentTimeMillis() - startTime;
 
-        if (verbose) {
-            System.out.println("Tempo de carregamento dos parâmetros: " + loadTime + " ms");
-        }
-
         startTime = System.currentTimeMillis();
         Map<String, Map<String, Integer>> resultMap = analyzePhrase(jsonObject, depth, phrase);
         long checkTime = System.currentTimeMillis() - startTime;
 
         if (verbose) {
-            System.out.println("Tempo de verificação da frase: " + checkTime + " ms");
+            printMetricsTable(loadTime, checkTime);
         }
 
         if (resultMap.isEmpty()) {
-            System.out.println("Na frase não existe nenhum filho do nível"+ depth +"e nem o nível 5 possui os termos especificados.\n");
+            System.out.println("Na frase não existe nenhum filho do nível " + depth + " e nem o nível " + depth + " possui os termos especificados.\n");
         } else {
             for (Map.Entry<String, Map<String, Integer>> entry : resultMap.entrySet()) {
                 String nodeName = entry.getKey();
@@ -126,6 +122,13 @@ public class Main {
                 String nodeName = entry.getKey();
                 JsonElement element = entry.getValue();
                 Map<String, Integer> subNodeWordCounts = new HashMap<>();
+
+                // Verificar se o nome do nó corresponde às palavras
+                for (String word : words) {
+                    if (nodeName.equalsIgnoreCase(word)) {
+                        subNodeWordCounts.merge(nodeName, 1, Integer::sum);
+                    }
+                }
 
                 if (element.isJsonObject()) {
                     // Contar as palavras na camada abaixo
@@ -180,5 +183,14 @@ public class Main {
                 countWordsInSubLayer(element.getAsJsonObject(), words, subNodeWordCounts);
             }
         }
+    }
+
+    private static void printMetricsTable(long loadTime, long checkTime) {
+        System.out.println("\\n+-----------------------------+");
+        System.out.println("|         METRICS TABLE        |");
+        System.out.println("+-----------------------------+");
+        System.out.printf("| %-25s | %-5d ms |\n", "Time to load parameters", loadTime);
+        System.out.printf("| %-25s | %-5d ms |\n", "Time to analyze the phrase", checkTime);
+        System.out.println("+-----------------------------+");
     }
 }
